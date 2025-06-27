@@ -1,9 +1,19 @@
 const express = require('express');
 
 const app = express();
-app.use("/ravi",(req,res) =>{
-    res.send("message from the server created by RAvi")
+
+
+// this will only handle get request
+app.get("/ravi",(req,res)=>{
+    res.send({firstame :"Ravi", lastnaem : "Patel"})
 })
+
+// this will only handle post request
+app.post("/ravi",(req,res)=>{
+    res.send("data sucessuflly added to database")
+})
+
+
 
 app.use("/prarthit",(req,res) =>{
     res.send("message from the server created by Prarthitttt")
