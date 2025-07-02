@@ -1,17 +1,21 @@
 const express = require('express');
 const { adminauth } = require('./middleware/auth');
 
+const connectDB = require("./config/database")
+
 const app = express();
 
-app.use("/admin",adminauth)
 
 
-app.use("/admin/getdata",(req,res,next)=>{
+connectDB()
+  .then(() => {
+    console.log("Database is connected successfully");
 
-    res.send("get the data")
-})
+    app.listen(4000, () => {
+      console.log("Server is running on port number 4000...");
+    });
+  })
+  .catch((err) => {
+    console.log("Error is there:", err);
+  });
 
-app.listen(4000,()=> {  console.log("server is running port number 4000.......");
-    
-}
-);
