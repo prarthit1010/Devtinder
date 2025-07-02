@@ -2,33 +2,30 @@ const express = require('express');
 
 const app = express();
 
+app.use("/admin",(req,res,next)=>{
+   
+    console.log("console is print .................")
+    const token = "prarthit";
 
-// this will only handle get request
-app.get("/ravi",(req,res)=>{
-    res.send({firstame :"Ravi", lastnaem : "Patel"})
-})
+    const isAuth = token === "prarthit";
 
-// this will only handle post request
-app.post("/ravi",(req,res)=>{
-    res.send("data sucessuflly added to database")
-})
+    if(isAuth){
+     next()
 
-
-
-app.use("/prarthit",(req,res) =>{
-    res.send("message from the server created by Prarthitttt")
-})
-app.use("/dd",(req,res) =>{
-    res.send("message from the server created by dd")
-})
-
-app.use("/",(req,res) =>{
-    res.send("message from the server created by bhuri")
+    }
+    else {
+        res.status(402).send("uthintication error")
+    }
+    
 })
 
 
+app.use("/admin/getdata",(req,res,next)=>{
 
-app.listen(4000,()=> {  console.log("server is running port number 3000.......");
+    res.send("get the data")
+})
+
+app.listen(4000,()=> {  console.log("server is running port number 4000.......");
     
 }
 );
