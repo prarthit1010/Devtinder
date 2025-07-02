@@ -1,23 +1,9 @@
 const express = require('express');
+const { adminauth } = require('./middleware/auth');
 
 const app = express();
 
-app.use("/admin",(req,res,next)=>{
-   
-    console.log("console is print .................")
-    const token = "prarthit";
-
-    const isAuth = token === "prarthit";
-
-    if(isAuth){
-     next()
-
-    }
-    else {
-        res.status(402).send("uthintication error")
-    }
-    
-})
+app.use("/admin",adminauth)
 
 
 app.use("/admin/getdata",(req,res,next)=>{
