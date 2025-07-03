@@ -25,6 +25,64 @@ app.get("/user", async (req, res) => {
   }
 });
 
+//Update the Data 
+
+app.patch("/user",async (req,res)=>{
+
+  const userId = req.body.userId;
+
+  const data = req.body;
+
+  try{
+    const user = await User.findByIdAndUpdate(userId,data);
+    res.send("User updated Sucessfully");
+  }
+  catch(err){
+     res.status(500).send("Internal Server Error");
+  }
+});
+
+
+
+// feed get the all data from the database
+
+
+app.get("/feed",async(req,res)=>{
+
+try{
+
+  const allUser = await User.find({});
+if (allUser.length === 0) {
+      return res.status(400).send("User not found");
+    } else {
+      res.send(allUser);
+    }
+  } catch (err) {
+    console.error("Error while fetching user:", err.message);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+// delete user using the id
+
+app.delete("/user",async (req,res)=> {
+
+  const userId = req.body.userId;
+
+  try{
+
+    const user = await User.findByIdAndDelete(userId)
+
+    res.send("user delated sucessfully")
+  }
+
+  catch (err) {
+    console.error("Error while fetching user:", err.message);
+    res.status(500).send("Internal Server Error");
+  }
+
+
+})
 
 
 // Signup route
