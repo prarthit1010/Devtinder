@@ -1,40 +1,26 @@
 const express = require('express');
-const { adminauth } = require('./middleware/auth');
-
-const connectDB = require("./config/database")
-
-const User = require("./Model/user")
+const connectDB = require("./config/database");
+const User = require("./Model/user");
 
 const app = express();
 
+// Middleware to parse JSON bodies
 app.use(express.json());
 
-
-
-
-app.post("/signup", async (req,res)=>{
-
-   
-    const user = new User(req.body)
-
-
-    try{
-
-        
+// Signup route
+app.post("/signup", async (req, res) => {
+  try {
+    const user = new User(req.body);
     await user.save();
 
-    res.send("data saved sucessfully")
+    res.status(201).send("Data saved successfully");
+  } catch (err) {
+    console.error("Error while saving user:", err.message);
+    res.status(500).send("Failed to save user data");
+  }
+});
 
-    }
-    catch(err){
-
-       
-    }
-
-})
-
-
-
+// Start server after DB connection
 connectDB()
   .then(() => {
     console.log("Database is connected successfully");
@@ -44,7 +30,5 @@ connectDB()
     });
   })
   .catch((err) => {
-    console.log("Error is there:", err);
+    console.error("Error connecting to database:", err);
   });
-
-
