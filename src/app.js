@@ -7,6 +7,26 @@ const app = express();
 // Middleware to parse JSON bodies
 app.use(express.json());
 
+// get the data from the email ID
+app.get("/user", async (req, res) => {
+  const userEmail = req.body.emailId;
+
+  try {
+    const users = await User.find({ emailId: userEmail });
+
+    if (users.length === 0) {
+      return res.status(400).send("User not found");
+    } else {
+      res.send(users);
+    }
+  } catch (err) {
+    console.error("Error while fetching user:", err.message);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+
+
 // Signup route
 app.post("/signup", async (req, res) => {
   try {
