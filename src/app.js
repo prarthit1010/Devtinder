@@ -2,6 +2,9 @@ const express = require('express');
 const connectDB = require("./config/database");
 const User = require("./Model/user");
 
+const {validateSignUpData} = require("./utils/validation");
+const bcrypt = require("bcrypt");
+
 const app = express();
 
 // Middleware to parse JSON bodies
@@ -27,10 +30,23 @@ app.get("/user", async (req, res) => {
 
 //Update the Data 
 
-app.patch("/user", async (req, res) => {
-  const userId = req.body.userId; // ✅ Match exactly with Postman key: "userId"
+app.patch("/user/:userId", async (req, res) => {
+
+  const userId = req.params?.userId;
 
   const data = req.body;
+
+
+
+  const ALLOWED_UPDATES = ["photoUrl","age","about", "gender"];
+
+  const isUPADTESALLOWED = Object.keys(data).every((k) =>
+     ALLOWED_UPDATES.includes(k));
+
+
+  if(!isUPADTESALLOWED){
+    res.status(400).send("Upadets is not Allowed.");
+  }
 
   // Optional: Clean emailId if present
   if (data.emailId) {
@@ -38,6 +54,8 @@ app.patch("/user", async (req, res) => {
   }
 
   try {
+
+
     const user = await User.findByIdAndUpdate(userId, data, {
       runValidators: true,
       new: true
@@ -102,14 +120,27 @@ app.delete("/user",async (req,res)=> {
 
 // Signup route
 app.post("/signup", async (req, res) => {
+  
+  
+  
   try {
-    const user = new User(req.body);
+
+  //validation of the data
+  validateSignUpData(req);
+
+  //enrypt the password
+  const { firstName,lastName,emailId, password } = req.body;
+const passwordHash = await bcrypt.hash(password,10)
+console.log(passwordHash);
+  
+
+    const user = new User({firstName,lastName,emailId, password : passwordHash,});
     await user.save();
 
     res.status(201).send("Data saved successfully");
   } catch (err) {
     console.error("Error while saving user:", err.message);
-    res.status(500).send("Failed to save user data", err.message);
+    res.status(500).send("Failed to save user data" + err.message);
   }
 });
 
