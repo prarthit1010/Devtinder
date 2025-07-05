@@ -1,14 +1,17 @@
 const express = require('express');
 const connectDB = require("./config/database");
 const User = require("./Model/user");
-
+const cookieParser = require("cookie-parser");
 const {validateSignUpData} = require("./utils/validation");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+app.use(cookieParser());
+
 
 // get the data from the email ID
 app.get("/user", async (req, res) => {
@@ -27,6 +30,8 @@ app.get("/user", async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+
+
 
 //Update the Data 
 
@@ -47,6 +52,8 @@ app.patch("/user/:userId", async (req, res) => {
   if(!isUPADTESALLOWED){
     res.status(400).send("Upadets is not Allowed.");
   }
+
+
 
   // Optional: Clean emailId if present
   if (data.emailId) {
@@ -96,6 +103,7 @@ if (allUser.length === 0) {
   }
 });
 
+
 // delete user using the id
 
 app.delete("/user",async (req,res)=> {
@@ -144,6 +152,34 @@ console.log(passwordHash);
   }
 });
 
+
+// get profile
+
+app.get("/profile", async (req, res) => {
+  try {
+    const cookies = req.cookies;
+    const { token } = cookies;
+
+    if (!token) {
+      throw new Error("Invalid Token");
+    }
+
+    const decodedMessage = await jwt.verify(token, "DEV@Tinder$790");
+    const { _id } = decodedMessage;
+    console.log("Logged In user is: " + _id);
+
+    const user = await User.findById(_id);
+    if (!user) {
+      throw new Error("User does not exist");
+    }
+
+    res.send(user);
+  } catch (err) {
+    console.error("Error in /profile:", err.message);
+    res.status(401).send("Unauthorized: " + err.message);
+  }
+});
+
 // login api
 
 app.post("/login", async (req, res) => {
@@ -158,7 +194,18 @@ app.post("/login", async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (isPasswordValid) {
-      res.send("Login Successful!!!");
+     
+
+      //create jsw token
+
+      const token = await jwt.sign({_id : user._id},"DEV@Tinder$790")
+
+      //add cokkie and send back response to user
+
+      res.cookie("token",token)
+       res.send("Login Successful!!!");
+
+
     } else { 
       throw new Error("Invalid credentials");
     }
