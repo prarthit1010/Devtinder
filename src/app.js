@@ -27,18 +27,33 @@ app.get("/user", async (req, res) => {
 
 //Update the Data 
 
-app.patch("/user",async (req,res)=>{
-
-  const userId = req.body.userId;
+app.patch("/user", async (req, res) => {
+  const userId = req.body.userId; // ✅ Match exactly with Postman key: "userId"
 
   const data = req.body;
 
-  try{
-    const user = await User.findByIdAndUpdate(userId,data);
-    res.send("User updated Sucessfully");
+  // Optional: Clean emailId if present
+  if (data.emailId) {
+    data.emailId = data.emailId.trim();
   }
-  catch(err){
-     res.status(500).send("Internal Server Error");
+
+  try {
+    const user = await User.findByIdAndUpdate(userId, data, {
+      runValidators: true,
+      new: true
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.send("User updated successfully");
+  } catch (err) {
+    console.error("Error while updating user:", err.message);
+    res.status(500).json({
+      message: "Failed to update user",
+      error: err.message
+    });
   }
 });
 
@@ -94,7 +109,7 @@ app.post("/signup", async (req, res) => {
     res.status(201).send("Data saved successfully");
   } catch (err) {
     console.error("Error while saving user:", err.message);
-    res.status(500).send("Failed to save user data");
+    res.status(500).send("Failed to save user data", err.message);
   }
 });
 
