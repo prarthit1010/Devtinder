@@ -5,12 +5,110 @@ const cookieParser = require("cookie-parser");
 const {validateSignUpData} = require("./utils/validation");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const {userAuth} = require("./middleware/auth")
 
 const app = express();
 
 // Middleware to parse JSON bodies
 app.use(express.json());
 app.use(cookieParser());
+
+
+
+
+
+// Signup route
+app.post("/signup", async (req, res) => {
+  
+  
+  
+  try {
+
+  //validation of the data
+  validateSignUpData(req);
+
+  //enrypt the password
+  const { firstName,lastName,emailId, password } = req.body;
+const passwordHash = await bcrypt.hash(password,10)
+console.log(passwordHash);
+  
+
+    const user = new User({firstName,lastName,emailId, password : passwordHash,});
+    await user.save();
+
+    res.status(201).send("Data saved successfully");
+  } catch (err) {
+    console.error("Error while saving user:", err.message);
+    res.status(500).send("Failed to save user data" + err.message);
+  }
+});
+
+
+// get profile
+
+app.get("/profile", userAuth, async (req, res) => {
+  try {
+
+    const user = req.user;
+
+    res.send(user);
+  } catch (err) {
+    console.error("Error in /profile:", err.message);
+    res.status(401).send("Unauthorized: " + err.message);
+  }
+});
+
+// login api
+
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+
+    const user = await User.findOne({ emailId: emailId });
+    if (!user) {
+      throw new Error("Invalid credentials");
+    }
+
+    const isPasswordValid = await user.validatePassword(password);
+
+    if (isPasswordValid) {
+     
+
+      //create jsw token
+
+      const token = await user.getJWT();
+
+      //add cokkie and send back response to user
+
+      res.cookie("token",token)
+       res.send("Login Successful!!!");
+
+
+    } else { 
+      throw new Error("Invalid credentials");
+    }
+  } catch (err) {
+    res.status(400).send("ERROR : " + err.message);
+  }
+});
+
+//send connection request
+
+app.post("/sendConnectionrequest" , userAuth,  async (req,res) => {
+ const user  = req.user;
+  // sendind the connection request
+  console.log("sendind the connection request");
+
+  res.send("connection request is send........ by " + user.firstName);
+  
+})
+
+
+
+
+
+
+
 
 
 // get the data from the email ID
@@ -124,97 +222,6 @@ app.delete("/user",async (req,res)=> {
 
 
 })
-
-
-// Signup route
-app.post("/signup", async (req, res) => {
-  
-  
-  
-  try {
-
-  //validation of the data
-  validateSignUpData(req);
-
-  //enrypt the password
-  const { firstName,lastName,emailId, password } = req.body;
-const passwordHash = await bcrypt.hash(password,10)
-console.log(passwordHash);
-  
-
-    const user = new User({firstName,lastName,emailId, password : passwordHash,});
-    await user.save();
-
-    res.status(201).send("Data saved successfully");
-  } catch (err) {
-    console.error("Error while saving user:", err.message);
-    res.status(500).send("Failed to save user data" + err.message);
-  }
-});
-
-
-// get profile
-
-app.get("/profile", async (req, res) => {
-  try {
-    const cookies = req.cookies;
-    const { token } = cookies;
-
-    if (!token) {
-      throw new Error("Invalid Token");
-    }
-
-    const decodedMessage = await jwt.verify(token, "DEV@Tinder$790");
-    const { _id } = decodedMessage;
-    console.log("Logged In user is: " + _id);
-
-    const user = await User.findById(_id);
-    if (!user) {
-      throw new Error("User does not exist");
-    }
-
-    res.send(user);
-  } catch (err) {
-    console.error("Error in /profile:", err.message);
-    res.status(401).send("Unauthorized: " + err.message);
-  }
-});
-
-// login api
-
-app.post("/login", async (req, res) => {
-  try {
-    const { emailId, password } = req.body;
-
-    const user = await User.findOne({ emailId: emailId });
-    if (!user) {
-      throw new Error("Invalid credentials");
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (isPasswordValid) {
-     
-
-      //create jsw token
-
-      const token = await jwt.sign({_id : user._id},"DEV@Tinder$790")
-
-      //add cokkie and send back response to user
-
-      res.cookie("token",token)
-       res.send("Login Successful!!!");
-
-
-    } else { 
-      throw new Error("Invalid credentials");
-    }
-  } catch (err) {
-    res.status(400).send("ERROR : " + err.message);
-  }
-});
-
-
 
 // Start server after DB connection
 connectDB()
