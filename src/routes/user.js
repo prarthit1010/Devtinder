@@ -1,8 +1,8 @@
 const express = require("express");
 const userRouter = express.Router();
 
-const { userAuth } = require("../middlewares/auth");
-const ConnectionRequest = require("../models/connectionRequest");
+const { userAuth } = require("../middleware/auth");
+const ConnectionRequest = require("../Model/connectionRequest");
 
 // Get all the pending connection request for the loggedIn user
 userRouter.get("/user/requests/received", userAuth, async (req, res) => {
